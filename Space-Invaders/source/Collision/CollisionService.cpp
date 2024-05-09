@@ -1,5 +1,6 @@
 #include "../../header/Collision/CollisionService.h"
 #include "../../header/Collision/ICollider.h"
+#include <algorithm>
 
 namespace Collision
 {
@@ -16,7 +17,7 @@ namespace Collision
 
 	void CollisionService::processCollision()
 	{
-		for (int i = 0; i < collider_list.size(); i++)
+		for (int i = 0; i < collider_list.size() - 1; i++)
 		{
 			for (int j = i + 1; j < collider_list.size(); j++)
 			{
@@ -27,16 +28,12 @@ namespace Collision
 
 	void CollisionService::doCollision(int index_i, int index_j)
 	{
-		if (collider_list[index_i]->getCollisionState() == CollisionState::DISABLED ||
-			collider_list[index_j]->getCollisionState() == CollisionState::DISABLED) return;
+		if (!areActiveColliders(index_i, index_j)) return;
 
 		if (hasCollisionOccurred(index_i, index_j))
 		{
-			if (areActiveColliders(index_i, index_j)) 
-				collider_list[index_i]->onCollision(collider_list[index_j]);
-
-			if (areActiveColliders(index_i, index_j)) 
-				collider_list[index_j]->onCollision(collider_list[index_i]);
+			collider_list[index_i]->onCollision(collider_list[index_j]);
+			collider_list[index_j]->onCollision(collider_list[index_i]);
 		}
 	}
 
@@ -61,6 +58,8 @@ namespace Collision
 
 	void CollisionService::removeCollider(ICollider* collider)
 	{
-		collider_list.erase(std::remove(collider_list.begin(), collider_list.end(), collider), collider_list.end());
+		auto it = std::find(collider_list.begin(), collider_list.end(), collider);
+		if (it != collider_list.end())
+			collider_list.erase(it);
 	}
 }
